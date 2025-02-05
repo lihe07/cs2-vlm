@@ -12,7 +12,9 @@ folder_path = 'C:/Users/Bruno Chen/Downloads/output/'
 
 def run_cs2_dumper():
     try:
-        result = subprocess.run(['findOffsets\cs2-dumper.exe'])
+        # First cd to /findOffsets
+        os.chdir('findOffsets')
+        result = subprocess.run(['cs2-dumper.exe'])
     except subprocess.CalledProcessError as e:
         print(f"An error occurred while running cs2-dumpe.exe: {e}")
 
@@ -29,6 +31,9 @@ else:
 # Run cs2-dumpe.exe to dump the offsets
 run_cs2_dumper()
 
+# Back to Parent Directory
+
+os.chdir('..')
 
 # Define the variables to update
 variables_to_update = {
@@ -205,6 +210,5 @@ decimal_values = find_decimal_values(folder_path, variables_to_update)
 
 # Write the results to a file
 with open('outputOffsets.py', 'w') as f:
-    f.write('#signatures\n\n')
     for var, value in decimal_values.items():
         f.write(f'{var} = {value}\n')
