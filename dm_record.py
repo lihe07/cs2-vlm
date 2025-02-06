@@ -33,3 +33,37 @@ from key_output import p_char, e_char, c_char_, t_char, cons_char, ret_char
 from screen_input import grab_window
 from config import *
 from utils import *
+
+from findOffsets.outputOffsets import *
+
+save_name = "test"
+folder_name = "/test/"
+starting_value = 1
+
+hwin_cs2 = win32gui.FindWindow(0, ('Counter-Strike 2'))
+if(hwin_cs2):
+    pid=win32process.GetWindowThreadProcessId(hwin_cs2)
+    handle = pymem.Pymem()
+    handle.open_process_from_id(pid[1])
+    csgo_entry = handle.process_base
+    print('CS2 was found')
+else:
+    print('CS2 wasnt found')
+    os.system('pause')
+    sys.exit()
+    
+list_of_modules=handle.list_modules()
+
+while(list_of_modules!=None):
+    tmp = next(list_of_modules)
+    if(tmp.name == 'client.dll'):
+        off_client_dll = tmp.lpBaseOfDll
+        print('client.dll was found')
+        break
+    if(tmp.name=="engine.dll"):
+        print('found engine.dll')
+        off_enginedll=tmp.lpBaseOfDll
+        break
+
+
+    
