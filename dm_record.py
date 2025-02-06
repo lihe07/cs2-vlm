@@ -52,18 +52,31 @@ else:
     os.system('pause')
     sys.exit()
     
-list_of_modules=handle.list_modules()
+list_of_modules = handle.list_modules()
+off_client_dll = None
+off_enginedll = None
 
-while(list_of_modules!=None):
+while list_of_modules is not None:
     tmp = next(list_of_modules)
-    if(tmp.name == 'client.dll'):
+    if tmp.name == 'client.dll':
         off_client_dll = tmp.lpBaseOfDll
         print('client.dll was found')
-        break
-    if(tmp.name=="engine.dll"):
-        print('found engine.dll')
-        off_enginedll=tmp.lpBaseOfDll
+    elif tmp.name == 'engine2.dll':
+        off_enginedll = tmp.lpBaseOfDll
+        print('engine2.dll was found')
+    if off_client_dll and off_enginedll:
         break
 
+OpenProcess = windll.kernel32.OpenProcess
+CloseHandle = windll.kernel32.CloseHandle
+PROCESS_ALL_ACCESS = 0x1F0FFF
+game = windll.kernel32.OpenProcess(PROCESS_ALL_ACCESS, 0, pid[1])
 
-    
+
+SAVE_TRAIN_DATA = True
+IS_PAUSE = False # pause saving of data
+n_loops = 0 # how many frames looped 
+training_data=[]
+img_small = grab_window(hwin_cs2, game_resolution=csgo_game_res, SHOW_IMAGE=False)
+
+print('Starting to record data')
