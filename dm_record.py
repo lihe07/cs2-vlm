@@ -32,51 +32,51 @@ from key_output import p_char, e_char, c_char_, t_char, cons_char, ret_char
 
 from screen_input import grab_window
 from config import *
-from utils import *
 
-from findOffsets.outputOffsets import *
+offsets = requests.get('https://raw.githubusercontent.com/a2x/cs2-dumper/main/output/offsets.json').json()
+client_dll = requests.get('https://raw.githubusercontent.com/a2x/cs2-dumper/main/output/client_dll.json').json()
 
-save_name = "test"
-folder_name = "/test/"
-starting_value = 1
+dwLocalPlayerPawn = offsets['client.dll']['dwLocalPlayerPawn']
+m_iHealth = client_dll['client.dll']['classes']['C_BaseEntity']['fields']['m_iHealth']
+m_iObserverMode = client_dll['client.dll']['classes']['CPlayer_ObserverServices']['fields']['m_iObserverMode']
 
-hwin_cs2 = win32gui.FindWindow(0, ('Counter-Strike 2'))
-if(hwin_cs2):
-    pid=win32process.GetWindowThreadProcessId(hwin_cs2)
-    handle = pymem.Pymem()
-    handle.open_process_from_id(pid[1])
-    csgo_entry = handle.process_base
-    print('CS2 was found')
-else:
-    print('CS2 wasnt found')
-    os.system('pause')
-    sys.exit()
-    
-list_of_modules = handle.list_modules()
-off_client_dll = None
-off_enginedll = None
 
-while list_of_modules is not None:
-    tmp = next(list_of_modules)
-    if tmp.name == 'client.dll':
-        off_client_dll = tmp.lpBaseOfDll
-        print('client.dll was found')
-    elif tmp.name == 'engine2.dll':
-        off_enginedll = tmp.lpBaseOfDll
-        print('engine2.dll was found')
-    if off_client_dll and off_enginedll:
+
+while True:
+    try:
+        pm = pymem.Pymem("cs2.exe")
+        client = pymem.process.module_from_name(pm.process_handle, "client.dll").lpBaseOfDll
         break
+    except:
+        pass
 
-OpenProcess = windll.kernel32.OpenProcess
-CloseHandle = windll.kernel32.CloseHandle
-PROCESS_ALL_ACCESS = 0x1F0FFF
-game = windll.kernel32.OpenProcess(PROCESS_ALL_ACCESS, 0, pid[1])
-
+pm = pymem.Pymem("cs2.exe")
+client = pymem.process.module_from_name(pm.process_handle, "client.dll").lpBaseOfDll
 
 SAVE_TRAIN_DATA = True
 IS_PAUSE = False # pause saving of data
 n_loops = 0 # how many frames looped 
 training_data=[]
+hwin_cs2 = win32gui.FindWindow(0, ('Counter-Strike 2'))
 img_small = grab_window(hwin_cs2, game_resolution=csgo_game_res, SHOW_IMAGE=False)
 
-print('Starting to record data')
+while True:
+    loop_start_time = time.time()
+    n_loops += 1
+
+    time.sleep(1)
+    keys_pressed = key_check()
+    if 'Q' in keys_pressed:
+        # exit loop
+        print('exiting...')
+        break
+
+    curr_vars={}
+    
+    player = pm.read_ulonglong(client + dwLocalPlayerPawn)
+    obs_mode = pm.read_bytes(player + m_iObserverMode, 1)
+    obs_mode_int = int.from_bytes(obs_mode, byteorder='little')
+    print('obs_mode (int):', obs_mode_int)
+    curr_vars['health'] = pm.read_int(player + m_iHealth)
+    print('health', curr_vars['health'])
+    
