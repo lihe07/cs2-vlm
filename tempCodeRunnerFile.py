@@ -1,1 +1,0 @@
-pm.read_longlong(client + dwLocalPlayerPawn)
