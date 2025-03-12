@@ -43,12 +43,10 @@ ticks_df = parser.parse_ticks([
     "Y",
     "Z",
     "health",
-    "fov",
     "is_scoped",
     "X",
     "Y",
     "Z",
-    "ducked",
     "velocity_X",
     "velocity_Y",
     "velocity_Z",
@@ -69,20 +67,67 @@ ticks_df = parser.parse_ticks([
     "DUCK",
     "buttons",
     "active_weapon_name",
-    "total_rounds_played"
+    "total_rounds_played",
+    "inventory"
 ])
 
 ticks_df.to_csv("g2-vs-spirit-m3-dust2.csv", index=False)
 
-# Read the data
-
-
-
 data = pd.read_csv("g2-vs-spirit-m3-dust2.csv")
 
-# leave only data of player name NiKo
 data = data[data["name"] == "NiKo"]
 
-# Save the data
 
+# Add columns for weapon change
+data["Button 1"] = "FALSE"
+data["Button 2"] = "FALSE"
+data["Button 3"] = "FALSE"
+data["Button 4"] = "FALSE"
+data["Button 5"] = "FALSE"
+
+# Iterate through each row and check for weapon change
+previous_weapon = None
+previous_previous_weapon = None
+for index, row in data.iterrows():
+    current_weapon = row["active_weapon_name"]
+    if previous_previous_weapon != previous_weapon:
+        if previous_weapon in ["Glock-18", "P250", "USP-S", "Desert Eagle"]:
+            data.at[index, "Button 1"] = "TRUE"
+        elif previous_weapon in ["AK-47", "M4A4", "M4A1-S", "Galil AR", "MP9", "MAC-10"]:
+            data.at[index, "Button 2"] = "TRUE"
+        elif previous_weapon in ["Butterfly Knife"]:
+            data.at[index, "Button 3"] = "TRUE"
+        elif previous_weapon in ["Smoke Grenade", "High Explosive Grenade", "Flashbang", "Molotov", "Incendiary Grenade"]:
+            data.at[index, "Button 4"] = "TRUE"
+        elif previous_weapon in ["C4 Explosive"]:
+            data.at[index, "Button 5"] = "TRUE"
+    previous_previous_weapon = previous_weapon
+    previous_weapon = current_weapon
+    # If button  "IN_WALK": 1 << 17, is pressed, then the player is walking, if button "IN_DUCK": 1 << 2, is pressed, then the player is crouching
+    if row["buttons"] & (1 << 2):
+        data.at[index, "DUCK"] = "TRUE"
+    else:
+        data.at[index, "DUCK"] = "FALSE"
+
+
+# From the inventory column, extract the number of grenades, incendiary, smoke, and flash ['Butterfly Knife', 'Glock-18', 'Smoke Grenade', 'Flashbang', 'AK-47', 'High Explosive Grenade']
+data["Granades"] = data["inventory"].apply(lambda x: x.count("High Explosive Grenade"))
+data["Incendiary"] = data["inventory"].apply(lambda x: x.count("Incendiary Grenade"))
+data["Incendiary"] = data["inventory"].apply(lambda x: x.count("Molotov"))
+data["Smoke"] = data["inventory"].apply(lambda x: x.count("Smoke Grenade"))
+data["Flash"] = data["inventory"].apply(lambda x: x.count("Flashbang"))
+
+#
+
+
+# Delete the inventory column
+data = data.drop(columns=["inventory"])
+data = data.drop(columns=["steamid"])
+data = data.drop(columns=["name"])
+data = data.drop(columns=["active_weapon_name"])
+
+
+
+
+# Save the data
 data.to_csv("g2-vs-spirit-m3-dust2-niko.csv", index=False)
