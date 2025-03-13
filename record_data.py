@@ -108,6 +108,10 @@ for index, row in data.iterrows():
         data.at[index, "DUCK"] = "TRUE"
     else:
         data.at[index, "DUCK"] = "FALSE"
+    if row["buttons"] & (1 << 16):
+        data.at[index, "WALK"] = "TRUE"
+    else:
+        data.at[index, "WALK"] = "FALSE"
 
 
 # From the inventory column, extract the number of grenades, incendiary, smoke, and flash ['Butterfly Knife', 'Glock-18', 'Smoke Grenade', 'Flashbang', 'AK-47', 'High Explosive Grenade']
@@ -125,6 +129,7 @@ data = data.drop(columns=["inventory"])
 data = data.drop(columns=["steamid"])
 data = data.drop(columns=["name"])
 data = data.drop(columns=["active_weapon_name"])
+data = data.drop(columns=["buttons"])
 
 
 
